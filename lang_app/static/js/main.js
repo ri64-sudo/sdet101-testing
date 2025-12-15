@@ -32,12 +32,30 @@ function showLogin() {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("login-section").style.display = "block";
   document.getElementById("register-section").style.display = "none";
+  // Reset password field to hidden when showing login
+  const passwordInput = document.getElementById("password");
+  const toggleBtn = document.getElementById("toggle-password");
+  if (passwordInput) passwordInput.type = "password";
+  if (toggleBtn) {
+    toggleBtn.classList.remove("active");
+    const icon = toggleBtn.querySelector(".toggle-icon");
+    if (icon) icon.textContent = "👁️";
+  }
 }
 
 function showRegister() {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("login-section").style.display = "none";
   document.getElementById("register-section").style.display = "block";
+  // Reset password field to hidden when showing register
+  const passwordInput = document.getElementById("reg-password");
+  const toggleBtn = document.getElementById("toggle-reg-password");
+  if (passwordInput) passwordInput.type = "password";
+  if (toggleBtn) {
+    toggleBtn.classList.remove("active");
+    const icon = toggleBtn.querySelector(".toggle-icon");
+    if (icon) icon.textContent = "👁️";
+  }
 }
 
 function toggleSections(authenticated) {
@@ -540,6 +558,30 @@ async function startQuiz() {
   }
 }
 
+// Password toggle functionality
+function togglePasswordVisibility(passwordId, toggleId) {
+  const passwordInput = document.getElementById(passwordId);
+  const toggleButton = document.getElementById(toggleId);
+  
+  if (passwordInput && toggleButton) {
+    const toggleIcon = toggleButton.querySelector(".toggle-icon");
+    
+    toggleButton.addEventListener("click", () => {
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleButton.classList.add("active");
+        toggleButton.setAttribute("aria-label", "Hide password");
+        if (toggleIcon) toggleIcon.textContent = "🙈";
+      } else {
+        passwordInput.type = "password";
+        toggleButton.classList.remove("active");
+        toggleButton.setAttribute("aria-label", "Show password");
+        if (toggleIcon) toggleIcon.textContent = "👁️";
+      }
+    });
+  }
+}
+
 // Event listeners
 document.getElementById("has-account-btn").onclick = showLogin;
 document.getElementById("no-account-btn").onclick = showRegister;
@@ -551,6 +593,10 @@ document.getElementById("logout-btn").onclick = logout;
 document.getElementById("task-add-btn").onclick = createTask;
 document.getElementById("vocab-add-btn").onclick = addVocab;
 document.getElementById("quiz-start-btn").onclick = startQuiz;
+
+// Initialize password toggles
+togglePasswordVisibility("password", "toggle-password");
+togglePasswordVisibility("reg-password", "toggle-reg-password");
 
 // Allow Enter key to submit forms
 document.getElementById("password").addEventListener("keypress", (e) => {
