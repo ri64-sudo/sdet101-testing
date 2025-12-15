@@ -1,0 +1,42 @@
+{
+  "name": "Language Learning Platform",
+  "description": "Cloud-based language learning application with task management, vocabulary building, and analytics",
+  "repository": "https://github.com/ri64-sudo/sdet101-testing",
+  "keywords": ["flask", "python", "language-learning", "education", "cloud"],
+  "env": {
+    "SECRET_KEY": {
+      "description": "Secret key for Flask sessions",
+      "generator": "secret"
+    },
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "DATABASE_URL": {
+      "description": "Database connection URL",
+      "value": "sqlite:///app.db"
+    },
+    "SENDGRID_API_KEY": {
+      "description": "SendGrid API key for email notifications (optional)",
+      "required": false
+    },
+    "SENDGRID_FROM_EMAIL": {
+      "description": "Email address for sending notifications",
+      "value": "noreply@langapp.com",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "addons": [],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
+

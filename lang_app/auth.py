@@ -57,6 +57,11 @@ def register():
         )
 
     login_user(user)
+    
+    # Send welcome email
+    from .email_utils import send_welcome_email  # noqa: WPS433
+    send_welcome_email(email, username)
+    
     return (
         jsonify(
             {"message": "Registered", "user": {"id": user.id, "username": user.username}}

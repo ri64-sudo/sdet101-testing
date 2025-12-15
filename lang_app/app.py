@@ -36,10 +36,12 @@ def create_app(test_config=None):
     from .auth import auth_bp  # noqa: WPS433
     from .tasks import tasks_bp  # noqa: WPS433
     from .vocab import vocab_bp  # noqa: WPS433
+    from .analytics import analytics_bp  # noqa: WPS433
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(tasks_bp, url_prefix="/api/tasks")
     app.register_blueprint(vocab_bp, url_prefix="/api/vocab")
+    app.register_blueprint(analytics_bp, url_prefix="/api/analytics")
 
     @app.route("/")
     def index():

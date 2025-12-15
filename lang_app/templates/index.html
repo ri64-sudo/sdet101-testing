@@ -3,54 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Language Learning App</title>
+  <title>Language Learning App - Cloud-Based Learning Platform</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Language Learning + Tasks</h1>
-    <div id="auth-status"></div>
+    <div class="header-content">
+      <h1>🌍 Language Learning Platform</h1>
+      <div id="auth-status" class="auth-status"></div>
+    </div>
   </header>
 
   <main>
-    <section id="auth">
-      <h2>Login / Register</h2>
-      <input id="username" placeholder="Username">
-      <input id="email" placeholder="Email (register only)">
-      <input id="password" type="password" placeholder="Password">
-      <button id="login-btn">Login</button>
-      <button id="register-btn">Register</button>
-      <button id="logout-btn">Logout</button>
-      <div id="auth-message" class="message"></div>
-    </section>
-
-    <section id="tasks">
-      <h2>Tasks</h2>
-      <div class="form-row">
-        <input id="task-name" placeholder="Task name">
-        <input id="task-due" type="date">
-        <button id="task-add-btn">Add Task</button>
+    <!-- Authentication Section -->
+    <section id="auth" class="card">
+      <h2>🔐 Authentication</h2>
+      <div class="auth-container">
+        <div class="input-group">
+          <input id="username" placeholder="Username" class="input-field">
+          <input id="email" placeholder="Email (for registration)" class="input-field" type="email">
+          <input id="password" type="password" placeholder="Password" class="input-field">
+        </div>
+        <div class="button-group">
+          <button id="login-btn" class="btn btn-primary">Login</button>
+          <button id="register-btn" class="btn btn-secondary">Register</button>
+          <button id="logout-btn" class="btn btn-danger" style="display: none;">Logout</button>
+        </div>
+        <div id="auth-message" class="message"></div>
       </div>
-      <ul id="task-list"></ul>
     </section>
 
-    <section id="vocab">
-      <h2>Vocabulary</h2>
-      <div class="form-row">
-        <input id="vocab-word" placeholder="Word to learn">
-        <input id="vocab-lang" placeholder="Target language code (e.g., es, fr)">
-        <button id="vocab-add-btn">Translate & Save</button>
+    <!-- Dashboard Section (shown when authenticated) -->
+    <section id="dashboard" class="card" style="display: none;">
+      <h2>📊 Dashboard & Analytics</h2>
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <h3>Tasks Summary</h3>
+          <div class="stat-value" id="stat-tasks-total">0</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+          <h3>Completed</h3>
+          <div class="stat-value" id="stat-tasks-completed">0</div>
+          <div class="stat-label">Tasks Done</div>
+        </div>
+        <div class="stat-card">
+          <h3>Vocabulary</h3>
+          <div class="stat-value" id="stat-vocab-total">0</div>
+          <div class="stat-label">Words Learned</div>
+        </div>
+        <div class="stat-card">
+          <h3>Languages</h3>
+          <div class="stat-value" id="stat-languages">0</div>
+          <div class="stat-label">Languages Studied</div>
+        </div>
       </div>
-      <ul id="vocab-list"></ul>
+      <div class="charts-container">
+        <div class="chart-wrapper">
+          <h3>Task Completion</h3>
+          <canvas id="task-chart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <h3>Vocabulary by Language</h3>
+          <canvas id="vocab-chart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <h3>Learning Progress (Last 30 Days)</h3>
+          <canvas id="progress-chart"></canvas>
+        </div>
+      </div>
+      <div id="upcoming-tasks" class="upcoming-section">
+        <h3>📅 Upcoming Tasks</h3>
+        <ul id="upcoming-list"></ul>
+      </div>
     </section>
 
-    <section id="quiz">
-      <h2>Quiz</h2>
-      <button id="quiz-start-btn">Start Quiz</button>
-      <div id="quiz-area"></div>
-      <div id="quiz-result"></div>
+    <!-- Tasks Section -->
+    <section id="tasks" class="card" style="display: none;">
+      <h2>✅ Task Management</h2>
+      <div class="form-row">
+        <input id="task-name" placeholder="Task name" class="input-field">
+        <input id="task-due" type="date" class="input-field">
+        <button id="task-add-btn" class="btn btn-primary">Add Task</button>
+      </div>
+      <ul id="task-list" class="task-list"></ul>
+    </section>
+
+    <!-- Vocabulary Section -->
+    <section id="vocab" class="card" style="display: none;">
+      <h2>📚 Vocabulary Builder</h2>
+      <div class="form-row">
+        <input id="vocab-word" placeholder="Word to learn" class="input-field">
+        <input id="vocab-lang" placeholder="Language code (e.g., es, fr, de)" class="input-field">
+        <button id="vocab-add-btn" class="btn btn-primary">Translate & Save</button>
+      </div>
+      <ul id="vocab-list" class="vocab-list"></ul>
+    </section>
+
+    <!-- Quiz Section -->
+    <section id="quiz" class="card" style="display: none;">
+      <h2>🧩 Vocabulary Quiz</h2>
+      <button id="quiz-start-btn" class="btn btn-primary">Start Quiz</button>
+      <div id="quiz-area" class="quiz-area"></div>
+      <div id="quiz-result" class="quiz-result"></div>
     </section>
   </main>
+
+  <footer>
+    <p>Cloud-Based Language Learning Platform | Built with Flask & Chart.js</p>
+  </footer>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
