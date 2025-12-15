@@ -83,6 +83,34 @@
       </div>
     </section>
 
+    <!-- Language Selection Section (shown after login if no language selected) -->
+    <section id="language-selection" class="card" style="display: none;">
+      <h2>🌍 Choose Your Learning Language</h2>
+      <p class="language-prompt">Select the language you want to learn. This will be used for vocabulary translations and learning activities.</p>
+      <div class="language-grid">
+        <button class="language-btn" data-lang="es">🇪🇸 Spanish (es)</button>
+        <button class="language-btn" data-lang="fr">🇫🇷 French (fr)</button>
+        <button class="language-btn" data-lang="de">🇩🇪 German (de)</button>
+        <button class="language-btn" data-lang="it">🇮🇹 Italian (it)</button>
+        <button class="language-btn" data-lang="pt">🇵🇹 Portuguese (pt)</button>
+        <button class="language-btn" data-lang="ru">🇷🇺 Russian (ru)</button>
+        <button class="language-btn" data-lang="ja">🇯🇵 Japanese (ja)</button>
+        <button class="language-btn" data-lang="ko">🇰🇷 Korean (ko)</button>
+        <button class="language-btn" data-lang="zh">🇨🇳 Chinese (zh)</button>
+        <button class="language-btn" data-lang="ar">🇸🇦 Arabic (ar)</button>
+        <button class="language-btn" data-lang="hi">🇮🇳 Hindi (hi)</button>
+        <button class="language-btn" data-lang="nl">🇳🇱 Dutch (nl)</button>
+      </div>
+      <div class="custom-language-section">
+        <h3>Or enter a custom language code:</h3>
+        <div class="form-row">
+          <input id="custom-lang-code" placeholder="Language code (e.g., sv, pl, tr)" class="input-field" maxlength="3">
+          <button id="custom-lang-btn" class="btn btn-secondary">Use This Language</button>
+        </div>
+      </div>
+      <div id="lang-message" class="message"></div>
+    </section>
+
     <!-- Dashboard Section (shown when authenticated) -->
     <section id="dashboard" class="card" style="display: none;">
       <h2>📊 Dashboard & Analytics</h2>
@@ -142,10 +170,14 @@
     <!-- Vocabulary Section -->
     <section id="vocab" class="card" style="display: none;">
       <h2>📚 Vocabulary Builder</h2>
+      <div id="current-language-display" class="current-language-badge"></div>
       <div class="form-row">
         <input id="vocab-word" placeholder="Word to learn" class="input-field">
         <input id="vocab-lang" placeholder="Language code (e.g., es, fr, de)" class="input-field">
         <button id="vocab-add-btn" class="btn btn-primary">Translate & Save</button>
+      </div>
+      <div class="form-row">
+        <button id="change-language-btn" class="btn btn-secondary">Change Learning Language</button>
       </div>
       <ul id="vocab-list" class="vocab-list"></ul>
     </section>

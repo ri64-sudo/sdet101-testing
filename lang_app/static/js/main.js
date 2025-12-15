@@ -58,10 +58,23 @@ function showRegister() {
   }
 }
 
-function toggleSections(authenticated) {
+function showLanguageSelection() {
+  document.getElementById("language-selection").style.display = "block";
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("tasks").style.display = "none";
+  document.getElementById("vocab").style.display = "none";
+  document.getElementById("quiz").style.display = "none";
+}
+
+function hideLanguageSelection() {
+  document.getElementById("language-selection").style.display = "none";
+}
+
+function toggleSections(authenticated, hasLanguage = false) {
   const welcomeSection = document.getElementById("welcome");
   const loginSection = document.getElementById("login-section");
   const registerSection = document.getElementById("register-section");
+  const languageSection = document.getElementById("language-selection");
   const dashboardSection = document.getElementById("dashboard");
   const tasksSection = document.getElementById("tasks");
   const vocabSection = document.getElementById("vocab");
@@ -72,13 +85,23 @@ function toggleSections(authenticated) {
     welcomeSection.style.display = "none";
     loginSection.style.display = "none";
     registerSection.style.display = "none";
-    dashboardSection.style.display = "block";
-    tasksSection.style.display = "block";
-    vocabSection.style.display = "block";
-    quizSection.style.display = "block";
+    
+    if (!hasLanguage) {
+      // Show language selection if no language is set
+      showLanguageSelection();
+    } else {
+      // Show main app sections
+      hideLanguageSelection();
+      dashboardSection.style.display = "block";
+      tasksSection.style.display = "block";
+      vocabSection.style.display = "block";
+      quizSection.style.display = "block";
+    }
+    
     if (logoutBtn) logoutBtn.style.display = "inline-block";
   } else {
     showWelcome();
+    hideLanguageSelection();
     dashboardSection.style.display = "none";
     tasksSection.style.display = "none";
     vocabSection.style.display = "none";
@@ -87,6 +110,8 @@ function toggleSections(authenticated) {
   }
 }
 
+let currentUserLanguage = null;
+
 async function refreshAuth() {
   const statusEl = document.getElementById("auth-status");
   try {
@@ -94,21 +119,76 @@ async function refreshAuth() {
     if (data.authenticated) {
       statusEl.textContent = `👤 ${data.user.username}`;
       statusEl.style.background = "#c6f6d5";
-      toggleSections(true);
-      await Promise.all([
-        loadDashboard(),
-        loadTasks(),
-        loadVocab()
-      ]);
+      currentUserLanguage = data.user.preferred_language;
+      
+      // Check if user has selected a language
+      const hasLanguage = !!currentUserLanguage;
+      toggleSections(true, hasLanguage);
+      
+      if (hasLanguage) {
+        // Update vocabulary form with preferred language
+        updateVocabularyLanguage(currentUserLanguage);
+        await Promise.all([
+          loadDashboard(),
+          loadTasks(),
+          loadVocab()
+        ]);
+      }
     } else {
       statusEl.textContent = "Not signed in";
       statusEl.style.background = "#f0f0f0";
       toggleSections(false);
+      currentUserLanguage = null;
     }
   } catch (err) {
     statusEl.textContent = "Not signed in";
     statusEl.style.background = "#f0f0f0";
     toggleSections(false);
+    currentUserLanguage = null;
+  }
+}
+
+async function setLanguage(languageCode) {
+  const msg = document.getElementById("lang-message");
+  try {
+    setMessage(msg, "Setting language...", false);
+    await api("/api/auth/set-language", {
+      method: "POST",
+      body: JSON.stringify({ language: languageCode }),
+    });
+    
+    currentUserLanguage = languageCode;
+    setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}!`, false);
+    
+    // Update UI
+    updateVocabularyLanguage(languageCode);
+    
+    // Hide language selection and show main app
+    setTimeout(async () => {
+      hideLanguageSelection();
+      toggleSections(true, true);
+      await Promise.all([
+        loadDashboard(),
+        loadTasks(),
+        loadVocab()
+      ]);
+    }, 1000);
+  } catch (err) {
+    setMessage(msg, `❌ ${err.message}`, true);
+  }
+}
+
+function updateVocabularyLanguage(langCode) {
+  const langInput = document.getElementById("vocab-lang");
+  const langDisplay = document.getElementById("current-language-display");
+  
+  if (langInput) {
+    langInput.value = langCode;
+    langInput.placeholder = `Language: ${langCode.toUpperCase()}`;
+  }
+  
+  if (langDisplay) {
+    langDisplay.textContent = `🌍 Learning: ${langCode.toUpperCase()}`;
   }
 }
 
@@ -137,28 +217,55 @@ async function login() {
 }
 
 async function register() {
-  const username = document.getElementById("reg-username").value;
-  const email = document.getElementById("reg-email").value;
+  const username = document.getElementById("reg-username").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
   const password = document.getElementById("reg-password").value;
   const msg = document.getElementById("reg-message");
   
+  // Clear previous messages
+  setMessage(msg, "", false);
+  
   if (!username || !email || !password) {
-    setMessage(msg, "Please fill in all fields", true);
+    setMessage(msg, "❌ Please fill in all fields", true);
+    return;
+  }
+
+  // Basic validation
+  if (username.length < 3) {
+    setMessage(msg, "❌ Username must be at least 3 characters", true);
+    return;
+  }
+
+  if (!email.includes("@") || !email.includes(".")) {
+    setMessage(msg, "❌ Please enter a valid email address", true);
+    return;
+  }
+
+  if (password.length < 6) {
+    setMessage(msg, "❌ Password must be at least 6 characters", true);
     return;
   }
 
   try {
-    await api("/api/auth/register", {
+    setMessage(msg, "Creating account...", false);
+    const response = await api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
     });
-    setMessage(msg, "✅ Account created successfully! Welcome!");
+    
+    setMessage(msg, "✅ Account created successfully! Welcome!", false);
     document.getElementById("reg-username").value = "";
     document.getElementById("reg-email").value = "";
     document.getElementById("reg-password").value = "";
-    await refreshAuth();
+    
+    // Wait a moment before refreshing to show success message
+    setTimeout(async () => {
+      await refreshAuth();
+    }, 1000);
   } catch (err) {
-    setMessage(msg, err.message, true);
+    console.error("Registration error:", err);
+    const errorMsg = err.message || "Failed to create account. Please try again.";
+    setMessage(msg, `❌ ${errorMsg}`, true);
   }
 }
 
@@ -463,10 +570,22 @@ async function loadVocab() {
 
 async function addVocab() {
   const source_word = document.getElementById("vocab-word").value.trim();
-  const target_language = document.getElementById("vocab-lang").value.trim().toLowerCase();
+  let target_language = document.getElementById("vocab-lang").value.trim().toLowerCase();
   
-  if (!source_word || !target_language) {
-    alert("Please enter both word and language code");
+  // Use preferred language if no language specified
+  if (!target_language && currentUserLanguage) {
+    target_language = currentUserLanguage;
+    document.getElementById("vocab-lang").value = target_language;
+  }
+  
+  if (!source_word) {
+    alert("Please enter a word to learn");
+    return;
+  }
+  
+  if (!target_language) {
+    alert("Please select a learning language first");
+    showLanguageSelection();
     return;
   }
   
@@ -476,7 +595,7 @@ async function addVocab() {
       body: JSON.stringify({ source_word, target_language }),
     });
     document.getElementById("vocab-word").value = "";
-    document.getElementById("vocab-lang").value = "";
+    // Keep the language code in the input
     await loadVocab();
   } catch (err) {
     alert(err.message);
@@ -593,6 +712,32 @@ document.getElementById("logout-btn").onclick = logout;
 document.getElementById("task-add-btn").onclick = createTask;
 document.getElementById("vocab-add-btn").onclick = addVocab;
 document.getElementById("quiz-start-btn").onclick = startQuiz;
+
+// Language selection event listeners
+document.querySelectorAll(".language-btn").forEach(btn => {
+  btn.onclick = () => {
+    const langCode = btn.getAttribute("data-lang");
+    setLanguage(langCode);
+  };
+});
+
+document.getElementById("custom-lang-btn").onclick = () => {
+  const customLang = document.getElementById("custom-lang-code").value.trim().toLowerCase();
+  if (customLang && customLang.length >= 2 && customLang.length <= 3) {
+    setLanguage(customLang);
+  } else {
+    const msg = document.getElementById("lang-message");
+    setMessage(msg, "❌ Please enter a valid 2-3 character language code", true);
+  }
+};
+
+document.getElementById("change-language-btn").onclick = () => {
+  showLanguageSelection();
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("tasks").style.display = "none";
+  document.getElementById("vocab").style.display = "none";
+  document.getElementById("quiz").style.display = "none";
+};
 
 // Initialize password toggles
 togglePasswordVisibility("password", "toggle-password");

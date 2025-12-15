@@ -58,6 +58,7 @@ def create_app(test_config=None):
                     "id": current_user.id,
                     "username": current_user.username,
                     "email": current_user.email,
+                    "preferred_language": current_user.preferred_language,
                 },
             }
         )
@@ -67,6 +68,20 @@ def create_app(test_config=None):
         """Initialize the SQLite database."""
         with app.app_context():
             db.create_all()
+            # Add preferred_language column if it doesn't exist (migration)
+            try:
+                from sqlalchemy import text
+                with db.engine.connect() as conn:
+                    # Check if column exists
+                    result = conn.execute(text("PRAGMA table_info(user)"))
+                    columns = [row[1] for row in result]
+                    if "preferred_language" not in columns:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN preferred_language VARCHAR(10)"))
+                        conn.commit()
+                        print("Added preferred_language column to user table.")
+            except Exception as e:
+                # If migration fails, it's okay - column might already exist
+                print(f"Migration note: {e}")
             print("Database initialized.")
 
     return app

@@ -180,6 +180,64 @@ main {
   font-size: 1.3rem;
 }
 
+/* Language Selection Styles */
+.language-prompt {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.language-btn {
+  padding: 1.5rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.language-btn:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.custom-language-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f0f0f0;
+  text-align: center;
+}
+
+.custom-language-section h3 {
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.current-language-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
 .btn-large {
   padding: 1rem 2rem;
   font-size: 1.1rem;

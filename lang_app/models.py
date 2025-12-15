@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    preferred_language = db.Column(db.String(10), nullable=True)  # Language code (e.g., 'es', 'fr', 'de')
 
     tasks = db.relationship("Task", backref="user", lazy=True)
     vocab_entries = db.relationship("VocabEntry", backref="user", lazy=True)
