@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simple Interactions</title>
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="Small page demonstrating DOM interactions, theming, and counters.">
+    <meta name="color-scheme" content="light dark">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Demo Page</h1>
+    </header>
+
+    <main>
+        <p id="message">This is the initial message. Click the button to change it.</p>
+
+        <div class="controls">
+            <button id="changeBtn">Change color &amp; text <span id="count">0</span></button>
+        </div>
+
+        <div class="controls">
+            <input id="msgInput" type="text" placeholder="Type new message…" aria-label="New message input">
+            <button id="applyBtn" type="button">Apply</button>
+        </div>
+
+        <div class="controls">
+            <button id="themeToggle" type="button">Toggle Theme</button>
+        </div>
+    </main>
+
+    <footer>
+        <small>© Ijaz, 2025</small>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+

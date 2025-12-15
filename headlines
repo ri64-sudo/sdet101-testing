@@ -1,0 +1,40 @@
+import requests, sqlite3
+
+API_KEY = "YOUR_API_KEY"
+conn = sqlite3.connect("news.db")
+c = conn.cursor()
+c.execute('''CREATE TABLE IF NOT EXISTS headlines (
+    id INTEGER PRIMARY KEY, title TEXT UNIQUE, description TEXT, published_at TEXT)''')
+
+def fetch_news(topic):
+    r = requests.get("https://newsapi.org/v2/everything", params={
+        "q": topic, "apiKey": API_KEY, "pageSize": 5, "sortBy": "publishedAt", "language": "en"
+    }).json()
+    print("\nTop Headlines:\n")
+    for i, a in enumerate(r.get("articles", []), 1):
+        title, desc, date = a['title'], a['description'], a['publishedAt'][:10]
+        print(f"{i}. Title: {title}\n   Description: {desc}\n   Published At: {date}\n")
+        try:
+            c.execute("INSERT INTO headlines (title, description, published_at) VALUES (?, ?, ?)", (title, desc, date))
+        except sqlite3.IntegrityError:
+            continue
+    conn.commit()
+    print("Data saved.\n")
+
+def search(keyword):
+    rows = c.execute("SELECT title, description, published_at FROM headlines WHERE title LIKE ?", ('%' + keyword + '%',)).fetchall()
+    for i, (t, d, p) in enumerate(rows, 1):
+        print(f"{i}. Title: {t}\n   Description: {d}\n   Published At: {p}\n")
+
+def delete(start, end):
+    c.execute("DELETE FROM headlines WHERE published_at BETWEEN ? AND ?", (start, end))
+    conn.commit()
+    print(f"Deleted {c.rowcount} headline(s).\n")
+
+while True:
+    print("1. Fetch news  2. Search  3. Delete by date  4. Exit")
+    ch = input("Choice: ")
+    if ch == '1': fetch_news(input("Topic: "))
+    elif ch == '2': search(input("Keyword: "))
+    elif ch == '3': delete(input("Start date (YYYY-MM-DD): "), input("End date (YYYY-MM-DD): "))
+    elif ch == '4': break

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact | Portfolio</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script defer src="assets/js/main.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html">Your Name</a>
+      <button id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">Menu</button>
+      <ul id="navMenu" class="menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="skills.html">Skills</a></li>
+        <li><a href="links.html">Links</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="section">
+    <div class="container">
+      <h1>Contact</h1>
+      <form id="contactForm" novalidate>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required />
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required />
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <button class="btn primary" type="submit">Send</button>
+        <p class="alt-contact">Prefer email? <a href="mailto:you@example.com">you@example.com</a></p>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span id="year"></span> Your Name</p>
+      <p><a href="https://github.com/ri64-sudo" target="_blank" rel="noopener">GitHub: ri64-sudo</a></p>
+    </div>
+  </footer>
+</body>
+</html>
+
+

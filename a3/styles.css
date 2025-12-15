@@ -1,0 +1,27 @@
+﻿body {
+  font-family: sans-serif;
+  margin: 30px;
+  background: #fff;
+  color: #000;
+}
+
+#message {
+  color: #000;
+}
+
+.alt {
+  color: blue;
+}
+
+.theme-dark {
+  background: #222;
+  color: #eee;
+}
+
+.theme-dark #message {
+  color: #eee;
+}
+
+.theme-dark .alt {
+  color: yellow;
+}

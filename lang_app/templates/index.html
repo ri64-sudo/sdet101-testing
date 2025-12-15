@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Learning App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Language Learning + Tasks</h1>
+    <div id="auth-status"></div>
+  </header>
+
+  <main>
+    <section id="auth">
+      <h2>Login / Register</h2>
+      <input id="username" placeholder="Username">
+      <input id="email" placeholder="Email (register only)">
+      <input id="password" type="password" placeholder="Password">
+      <button id="login-btn">Login</button>
+      <button id="register-btn">Register</button>
+      <button id="logout-btn">Logout</button>
+      <div id="auth-message" class="message"></div>
+    </section>
+
+    <section id="tasks">
+      <h2>Tasks</h2>
+      <div class="form-row">
+        <input id="task-name" placeholder="Task name">
+        <input id="task-due" type="date">
+        <button id="task-add-btn">Add Task</button>
+      </div>
+      <ul id="task-list"></ul>
+    </section>
+
+    <section id="vocab">
+      <h2>Vocabulary</h2>
+      <div class="form-row">
+        <input id="vocab-word" placeholder="Word to learn">
+        <input id="vocab-lang" placeholder="Target language code (e.g., es, fr)">
+        <button id="vocab-add-btn">Translate & Save</button>
+      </div>
+      <ul id="vocab-list"></ul>
+    </section>
+
+    <section id="quiz">
+      <h2>Quiz</h2>
+      <button id="quiz-start-btn">Start Quiz</button>
+      <div id="quiz-area"></div>
+      <div id="quiz-result"></div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
