@@ -22,31 +22,50 @@ function setMessage(el, text, isError = false) {
   el.className = isError ? "message error" : "message";
 }
 
+function showWelcome() {
+  document.getElementById("welcome").style.display = "block";
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("register-section").style.display = "none";
+}
+
+function showLogin() {
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("login-section").style.display = "block";
+  document.getElementById("register-section").style.display = "none";
+}
+
+function showRegister() {
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("register-section").style.display = "block";
+}
+
 function toggleSections(authenticated) {
-  const authSection = document.getElementById("auth");
+  const welcomeSection = document.getElementById("welcome");
+  const loginSection = document.getElementById("login-section");
+  const registerSection = document.getElementById("register-section");
   const dashboardSection = document.getElementById("dashboard");
   const tasksSection = document.getElementById("tasks");
   const vocabSection = document.getElementById("vocab");
   const quizSection = document.getElementById("quiz");
   const logoutBtn = document.getElementById("logout-btn");
-  const emailInput = document.getElementById("email");
 
   if (authenticated) {
-    authSection.style.display = "none";
+    welcomeSection.style.display = "none";
+    loginSection.style.display = "none";
+    registerSection.style.display = "none";
     dashboardSection.style.display = "block";
     tasksSection.style.display = "block";
     vocabSection.style.display = "block";
     quizSection.style.display = "block";
-    logoutBtn.style.display = "inline-block";
-    emailInput.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
   } else {
-    authSection.style.display = "block";
+    showWelcome();
     dashboardSection.style.display = "none";
     tasksSection.style.display = "none";
     vocabSection.style.display = "none";
     quizSection.style.display = "none";
-    logoutBtn.style.display = "none";
-    emailInput.style.display = "block";
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
 }
 
@@ -100,10 +119,10 @@ async function login() {
 }
 
 async function register() {
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const msg = document.getElementById("auth-message");
+  const username = document.getElementById("reg-username").value;
+  const email = document.getElementById("reg-email").value;
+  const password = document.getElementById("reg-password").value;
+  const msg = document.getElementById("reg-message");
   
   if (!username || !email || !password) {
     setMessage(msg, "Please fill in all fields", true);
@@ -115,10 +134,10 @@ async function register() {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
     });
-    setMessage(msg, "✅ Registered and logged in!");
-    document.getElementById("username").value = "";
-    document.getElementById("email").value = "";
-    document.getElementById("password").value = "";
+    setMessage(msg, "✅ Account created successfully! Welcome!");
+    document.getElementById("reg-username").value = "";
+    document.getElementById("reg-email").value = "";
+    document.getElementById("reg-password").value = "";
     await refreshAuth();
   } catch (err) {
     setMessage(msg, err.message, true);
@@ -126,15 +145,17 @@ async function register() {
 }
 
 async function logout() {
-  const msg = document.getElementById("auth-message");
   try {
     await api("/api/auth/logout", { method: "POST" });
-    setMessage(msg, "Logged out");
     document.getElementById("task-list").innerHTML = "";
     document.getElementById("vocab-list").innerHTML = "";
     document.getElementById("quiz-area").innerHTML = "";
     document.getElementById("quiz-result").innerHTML = "";
     document.getElementById("upcoming-list").innerHTML = "";
+    
+    // Clear messages
+    document.getElementById("auth-message").textContent = "";
+    document.getElementById("reg-message").textContent = "";
     
     // Destroy charts
     if (taskChart) taskChart.destroy();
@@ -144,7 +165,7 @@ async function logout() {
     
     await refreshAuth();
   } catch (err) {
-    setMessage(msg, err.message, true);
+    console.error("Logout error:", err);
   }
 }
 
@@ -520,6 +541,10 @@ async function startQuiz() {
 }
 
 // Event listeners
+document.getElementById("has-account-btn").onclick = showLogin;
+document.getElementById("no-account-btn").onclick = showRegister;
+document.getElementById("back-to-welcome-btn").onclick = showWelcome;
+document.getElementById("back-to-welcome-reg-btn").onclick = showWelcome;
 document.getElementById("login-btn").onclick = login;
 document.getElementById("register-btn").onclick = register;
 document.getElementById("logout-btn").onclick = logout;
@@ -530,12 +555,13 @@ document.getElementById("quiz-start-btn").onclick = startQuiz;
 // Allow Enter key to submit forms
 document.getElementById("password").addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
-    const email = document.getElementById("email").value;
-    if (email) {
-      register();
-    } else {
-      login();
-    }
+    login();
+  }
+});
+
+document.getElementById("reg-password").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    register();
   }
 });
 

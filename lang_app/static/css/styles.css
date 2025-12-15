@@ -34,6 +34,12 @@ header {
   gap: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 header h1 {
   font-size: 1.75rem;
   color: #667eea;
@@ -74,6 +80,65 @@ main {
   font-size: 1.5rem;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 0.5rem;
+}
+
+/* Welcome Section Styles */
+.welcome-card {
+  text-align: center;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+.welcome-content h2 {
+  font-size: 2.5rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+  border: none;
+  padding: 0;
+}
+
+.welcome-text {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.welcome-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 12px;
+}
+
+.feature-item {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #4a5568;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f0f0f0;
+}
+
+.welcome-actions h3 {
+  margin-bottom: 1.5rem;
+  color: #4a5568;
+  font-size: 1.3rem;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  min-width: 200px;
 }
 
 /* Authentication Styles */
@@ -329,6 +394,23 @@ footer {
 
   .card {
     padding: 1.5rem;
+  }
+
+  .welcome-content h2 {
+    font-size: 2rem;
+  }
+
+  .welcome-text {
+    font-size: 1rem;
+  }
+
+  .welcome-features {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-large {
+    width: 100%;
+    min-width: auto;
   }
 
   .dashboard-grid {

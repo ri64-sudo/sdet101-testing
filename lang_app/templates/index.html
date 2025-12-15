@@ -11,26 +11,65 @@
   <header>
     <div class="header-content">
       <h1>🌍 Language Learning Platform</h1>
-      <div id="auth-status" class="auth-status"></div>
+      <div class="header-actions">
+        <div id="auth-status" class="auth-status"></div>
+        <button id="logout-btn" class="btn btn-danger" style="display: none;">Logout</button>
+      </div>
     </div>
   </header>
 
   <main>
-    <!-- Authentication Section -->
-    <section id="auth" class="card">
-      <h2>🔐 Authentication</h2>
+    <!-- Welcome Section -->
+    <section id="welcome" class="card welcome-card">
+      <div class="welcome-content">
+        <h2>🌟 Welcome to Language Learning Platform!</h2>
+        <p class="welcome-text">Your all-in-one platform for learning languages, managing tasks, and tracking your progress.</p>
+        <div class="welcome-features">
+          <div class="feature-item">📚 Build your vocabulary</div>
+          <div class="feature-item">✅ Manage learning tasks</div>
+          <div class="feature-item">📊 Track your progress</div>
+          <div class="feature-item">🧩 Test your knowledge</div>
+        </div>
+        <div class="welcome-actions">
+          <h3>Do you have an account?</h3>
+          <div class="button-group">
+            <button id="has-account-btn" class="btn btn-primary btn-large">Yes, Sign In</button>
+            <button id="no-account-btn" class="btn btn-secondary btn-large">No, Register</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login-section" class="card" style="display: none;">
+      <h2>🔐 Sign In</h2>
       <div class="auth-container">
         <div class="input-group">
           <input id="username" placeholder="Username" class="input-field">
-          <input id="email" placeholder="Email (for registration)" class="input-field" type="email">
           <input id="password" type="password" placeholder="Password" class="input-field">
         </div>
         <div class="button-group">
-          <button id="login-btn" class="btn btn-primary">Login</button>
-          <button id="register-btn" class="btn btn-secondary">Register</button>
-          <button id="logout-btn" class="btn btn-danger" style="display: none;">Logout</button>
+          <button id="login-btn" class="btn btn-primary">Sign In</button>
+          <button id="back-to-welcome-btn" class="btn btn-secondary">Back</button>
         </div>
         <div id="auth-message" class="message"></div>
+      </div>
+    </section>
+
+    <!-- Register Section -->
+    <section id="register-section" class="card" style="display: none;">
+      <h2>✨ Create Account</h2>
+      <div class="auth-container">
+        <div class="input-group">
+          <input id="reg-username" placeholder="Username" class="input-field">
+          <input id="reg-email" placeholder="Email" class="input-field" type="email">
+          <input id="reg-password" type="password" placeholder="Password" class="input-field">
+        </div>
+        <div class="button-group">
+          <button id="register-btn" class="btn btn-primary">Create Account</button>
+          <button id="back-to-welcome-reg-btn" class="btn btn-secondary">Back</button>
+        </div>
+        <div id="reg-message" class="message"></div>
       </div>
     </section>
 
