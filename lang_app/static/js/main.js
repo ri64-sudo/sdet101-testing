@@ -88,13 +88,8 @@ function showRegister() {
 }
 
 function showLanguageSelection() {
+  // Always show language selection at the top (don't hide other sections)
   document.getElementById("language-selection").style.display = "block";
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("tasks").style.display = "none";
-  document.getElementById("vocab").style.display = "none";
-  document.getElementById("quiz").style.display = "none";
-  const assignmentsSection = document.getElementById("assignments");
-  if (assignmentsSection) assignmentsSection.style.display = "none";
 }
 
 function hideLanguageSelection() {
@@ -122,17 +117,23 @@ function toggleSections(authenticated, hasLanguage = false) {
     if (forgotPasswordSection) forgotPasswordSection.style.display = "none";
     if (resetPasswordSection) resetPasswordSection.style.display = "none";
     
-    if (!hasLanguage) {
-      // Show language selection if no language is set
-      showLanguageSelection();
-    } else {
-      // Show main app sections
-      hideLanguageSelection();
+    // ALWAYS show language selection at the top after login
+    showLanguageSelection();
+    
+    if (hasLanguage) {
+      // Also show main app sections if language is set
       dashboardSection.style.display = "block";
       tasksSection.style.display = "block";
       vocabSection.style.display = "block";
       quizSection.style.display = "block";
       if (assignmentsSection) assignmentsSection.style.display = "block";
+    } else {
+      // Hide other sections until language is selected
+      dashboardSection.style.display = "none";
+      tasksSection.style.display = "none";
+      vocabSection.style.display = "none";
+      quizSection.style.display = "none";
+      if (assignmentsSection) assignmentsSection.style.display = "none";
     }
     
     if (logoutBtn) logoutBtn.style.display = "inline-block";
@@ -190,28 +191,41 @@ async function refreshAuth() {
 async function setLanguage(languageCode) {
   const msg = document.getElementById("lang-message");
   try {
-    setMessage(msg, "Setting language...", false);
+    setMessage(msg, "Setting language and creating your starter activity...", false);
     await api("/api/auth/set-language", {
       method: "POST",
       body: JSON.stringify({ language: languageCode }),
     });
     
     currentUserLanguage = languageCode;
-    setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}!`, false);
+    setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}! Creating basic starter activity...`, false);
     
     // Update UI
     updateVocabularyLanguage(languageCode);
     
-    // Hide language selection and show main app
+    // Automatically generate a basic assignment
+    try {
+      await api("/api/assignments/generate", {
+        method: "POST",
+        body: JSON.stringify({ type: "basic", language: languageCode }),
+      });
+      setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}! Basic starter activity created! 🎉`, false);
+    } catch (assignErr) {
+      // If basic assignment fails, still continue
+      console.log("Could not create basic assignment:", assignErr);
+      setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}!`, false);
+    }
+    
+    // Show main app sections (language selection stays visible at top)
     setTimeout(async () => {
-      hideLanguageSelection();
       toggleSections(true, true);
       await Promise.all([
         loadDashboard(),
         loadTasks(),
-        loadVocab()
+        loadVocab(),
+        loadAssignments()
       ]);
-    }, 1000);
+    }, 1500);
   } catch (err) {
     setMessage(msg, `❌ ${err.message}`, true);
   }

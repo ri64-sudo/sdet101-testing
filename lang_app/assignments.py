@@ -43,25 +43,39 @@ def list_assignments():
 def generate_assignment():
     """Generate a new assignment based on user's vocabulary."""
     data = request.get_json() or {}
-    assignment_type = data.get("type", "translation")  # translation, fill_blank, multiple_choice
+    assignment_type = data.get("type", "translation")  # basic, translation, fill_blank, multiple_choice
     language = data.get("language") or current_user.preferred_language
     
     if not language:
         return jsonify({"error": "No language selected. Please select a learning language first."}), 400
     
-    # Get user's vocabulary for the language
-    vocab_entries = VocabEntry.query.filter_by(
-        user_id=current_user.id,
-        target_language=language
-    ).all()
+    # Basic assignments don't require vocabulary
+    if assignment_type == "basic":
+        pass  # Skip vocabulary check
+    else:
+        # Get user's vocabulary for the language
+        vocab_entries = VocabEntry.query.filter_by(
+            user_id=current_user.id,
+            target_language=language
+        ).all()
+        
+        if len(vocab_entries) < 3:
+            return jsonify({
+                "error": f"Not enough vocabulary words. Add at least 3 words in {language.upper()} to generate assignments."
+            }), 400
     
-    if len(vocab_entries) < 3:
-        return jsonify({
-            "error": f"Not enough vocabulary words. Add at least 3 words in {language.upper()} to generate assignments."
-        }), 400
+    # Get vocabulary entries if needed (not for basic)
+    vocab_entries = []
+    if assignment_type != "basic":
+        vocab_entries = VocabEntry.query.filter_by(
+            user_id=current_user.id,
+            target_language=language
+        ).all()
     
     # Generate assignment based on type
-    if assignment_type == "translation":
+    if assignment_type == "basic":
+        assignment = _generate_basic_assignment(language)
+    elif assignment_type == "translation":
         assignment = _generate_translation_assignment(vocab_entries, language)
     elif assignment_type == "fill_blank":
         assignment = _generate_fill_blank_assignment(vocab_entries, language)
@@ -256,6 +270,55 @@ def _generate_multiple_choice_assignment(vocab_entries, language):
     return {
         "title": f"Multiple Choice - {language.upper()}",
         "description": "Choose the correct translation for each word",
+        "content": {
+            "questions": questions,
+            "answers": answers
+        }
+    }
+
+
+def _generate_basic_assignment(language):
+    """Generate a basic starter assignment with common words."""
+    # Common starter words for any language
+    basic_words = {
+        "hello": "Hello",
+        "thank you": "Thank you",
+        "yes": "Yes",
+        "no": "No",
+        "please": "Please",
+        "goodbye": "Goodbye",
+        "sorry": "Sorry",
+        "excuse me": "Excuse me",
+        "water": "Water",
+        "food": "Food"
+    }
+    
+    # Try to get translations using the translation API
+    from .vocab import translate_word
+    
+    questions = {}
+    answers = {}
+    
+    for idx, (english_word, _) in enumerate(list(basic_words.items())[:5], 1):
+        try:
+            # Translate the word
+            translated = translate_word(english_word, language)
+            questions[str(idx)] = {
+                "question": f"Translate '{english_word}' to {language.upper()}",
+                "hint": f"English: {english_word}"
+            }
+            answers[str(idx)] = translated
+        except Exception:
+            # Fallback if translation fails
+            questions[str(idx)] = {
+                "question": f"Learn the word: '{english_word}'",
+                "hint": f"Practice saying: {english_word}"
+            }
+            answers[str(idx)] = english_word  # Accept English as answer for now
+    
+    return {
+        "title": f"Basic {language.upper()} Starter - Welcome!",
+        "description": "Start your language learning journey with these essential words",
         "content": {
             "questions": questions,
             "answers": answers
