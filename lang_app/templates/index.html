@@ -57,7 +57,53 @@
           <button id="login-btn" class="btn btn-primary">Sign In</button>
           <button id="back-to-welcome-btn" class="btn btn-secondary">Back</button>
         </div>
+        <div class="forgot-password-link">
+          <a href="#" id="forgot-password-link" style="color: #667eea; text-decoration: none; font-size: 0.9rem;">Forgot your password?</a>
+        </div>
         <div id="auth-message" class="message"></div>
+      </div>
+    </section>
+
+    <!-- Forgot Password Section -->
+    <section id="forgot-password-section" class="card" style="display: none;">
+      <h2>🔑 Reset Password</h2>
+      <p class="section-description">Enter your username or email to reset your password.</p>
+      <div class="auth-container">
+        <div class="input-group">
+          <input id="reset-username" placeholder="Username or Email" class="input-field">
+        </div>
+        <div class="button-group">
+          <button id="request-reset-btn" class="btn btn-primary">Request Password Reset</button>
+          <button id="back-to-login-btn" class="btn btn-secondary">Back to Login</button>
+        </div>
+        <div id="reset-message" class="message"></div>
+      </div>
+    </section>
+
+    <!-- Reset Password Section -->
+    <section id="reset-password-section" class="card" style="display: none;">
+      <h2>🔑 Set New Password</h2>
+      <p class="section-description">Enter your new password below.</p>
+      <div class="auth-container">
+        <div class="input-group">
+          <div class="password-wrapper">
+            <input id="new-password" type="password" placeholder="New Password" class="input-field">
+            <button type="button" class="password-toggle" id="toggle-new-password" aria-label="Show password">
+              <span class="toggle-icon">👁️</span>
+            </button>
+          </div>
+          <div class="password-wrapper">
+            <input id="confirm-password" type="password" placeholder="Confirm New Password" class="input-field">
+            <button type="button" class="password-toggle" id="toggle-confirm-password" aria-label="Show password">
+              <span class="toggle-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="reset-password-btn" class="btn btn-primary">Reset Password</button>
+          <button id="cancel-reset-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+        <div id="reset-password-message" class="message"></div>
       </div>
     </section>
 
@@ -156,18 +202,7 @@
       </div>
     </section>
 
-    <!-- Tasks Section -->
-    <section id="tasks" class="card" style="display: none;">
-      <h2>✅ Task Management</h2>
-      <div class="form-row">
-        <input id="task-name" placeholder="Task name" class="input-field">
-        <input id="task-due" type="date" class="input-field">
-        <button id="task-add-btn" class="btn btn-primary">Add Task</button>
-      </div>
-      <ul id="task-list" class="task-list"></ul>
-    </section>
-
-    <!-- Vocabulary Section -->
+    <!-- Vocabulary Section (Learning - Top Priority) -->
     <section id="vocab" class="card" style="display: none;">
       <h2>📚 Vocabulary Builder</h2>
       <div id="current-language-display" class="current-language-badge"></div>
@@ -182,15 +217,7 @@
       <ul id="vocab-list" class="vocab-list"></ul>
     </section>
 
-    <!-- Quiz Section -->
-    <section id="quiz" class="card" style="display: none;">
-      <h2>🧩 Vocabulary Quiz</h2>
-      <button id="quiz-start-btn" class="btn btn-primary">Start Quiz</button>
-      <div id="quiz-area" class="quiz-area"></div>
-      <div id="quiz-result" class="quiz-result"></div>
-    </section>
-
-    <!-- Assignments Section -->
+    <!-- Assignments Section (Learning - Top Priority) -->
     <section id="assignments" class="card" style="display: none;">
       <h2>📝 Language Assignments</h2>
       <p class="section-description">Practice your language skills with interactive exercises!</p>
@@ -225,6 +252,25 @@
         </div>
         <div id="assignment-result" class="assignment-result"></div>
       </div>
+    </section>
+
+    <!-- Quiz Section (Learning - Top Priority) -->
+    <section id="quiz" class="card" style="display: none;">
+      <h2>🧩 Vocabulary Quiz</h2>
+      <button id="quiz-start-btn" class="btn btn-primary">Start Quiz</button>
+      <div id="quiz-area" class="quiz-area"></div>
+      <div id="quiz-result" class="quiz-result"></div>
+    </section>
+
+    <!-- Tasks Section (Management - Lower Priority) -->
+    <section id="tasks" class="card" style="display: none;">
+      <h2>✅ Task Management</h2>
+      <div class="form-row">
+        <input id="task-name" placeholder="Task name" class="input-field">
+        <input id="task-due" type="date" class="input-field">
+        <button id="task-add-btn" class="btn btn-primary">Add Task</button>
+      </div>
+      <ul id="task-list" class="task-list"></ul>
     </section>
   </main>
 

@@ -26,12 +26,16 @@ function showWelcome() {
   document.getElementById("welcome").style.display = "block";
   document.getElementById("login-section").style.display = "none";
   document.getElementById("register-section").style.display = "none";
+  document.getElementById("forgot-password-section").style.display = "none";
+  document.getElementById("reset-password-section").style.display = "none";
 }
 
 function showLogin() {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("login-section").style.display = "block";
   document.getElementById("register-section").style.display = "none";
+  document.getElementById("forgot-password-section").style.display = "none";
+  document.getElementById("reset-password-section").style.display = "none";
   // Reset password field to hidden when showing login
   const passwordInput = document.getElementById("password");
   const toggleBtn = document.getElementById("toggle-password");
@@ -43,10 +47,35 @@ function showLogin() {
   }
 }
 
+function showForgotPassword() {
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("register-section").style.display = "none";
+  document.getElementById("forgot-password-section").style.display = "block";
+  document.getElementById("reset-password-section").style.display = "none";
+  document.getElementById("reset-username").value = "";
+  document.getElementById("reset-message").textContent = "";
+}
+
+function showResetPassword(username) {
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("register-section").style.display = "none";
+  document.getElementById("forgot-password-section").style.display = "none";
+  document.getElementById("reset-password-section").style.display = "block";
+  // Store username for the reset request
+  document.getElementById("reset-password-section").setAttribute("data-username", username);
+  document.getElementById("new-password").value = "";
+  document.getElementById("confirm-password").value = "";
+  document.getElementById("reset-password-message").textContent = "";
+}
+
 function showRegister() {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("login-section").style.display = "none";
   document.getElementById("register-section").style.display = "block";
+  document.getElementById("forgot-password-section").style.display = "none";
+  document.getElementById("reset-password-section").style.display = "none";
   // Reset password field to hidden when showing register
   const passwordInput = document.getElementById("reg-password");
   const toggleBtn = document.getElementById("toggle-reg-password");
@@ -76,6 +105,8 @@ function toggleSections(authenticated, hasLanguage = false) {
   const welcomeSection = document.getElementById("welcome");
   const loginSection = document.getElementById("login-section");
   const registerSection = document.getElementById("register-section");
+  const forgotPasswordSection = document.getElementById("forgot-password-section");
+  const resetPasswordSection = document.getElementById("reset-password-section");
   const languageSection = document.getElementById("language-selection");
   const dashboardSection = document.getElementById("dashboard");
   const tasksSection = document.getElementById("tasks");
@@ -88,6 +119,8 @@ function toggleSections(authenticated, hasLanguage = false) {
     welcomeSection.style.display = "none";
     loginSection.style.display = "none";
     registerSection.style.display = "none";
+    if (forgotPasswordSection) forgotPasswordSection.style.display = "none";
+    if (resetPasswordSection) resetPasswordSection.style.display = "none";
     
     if (!hasLanguage) {
       // Show language selection if no language is set
@@ -297,6 +330,87 @@ async function logout() {
     await refreshAuth();
   } catch (err) {
     console.error("Logout error:", err);
+  }
+}
+
+async function requestPasswordReset() {
+  const usernameOrEmail = document.getElementById("reset-username").value.trim();
+  const msg = document.getElementById("reset-message");
+  
+  if (!usernameOrEmail) {
+    setMessage(msg, "Please enter your username or email", true);
+    return;
+  }
+  
+  try {
+    const response = await api("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ username: usernameOrEmail }),
+    });
+    
+    if (response.success && response.username) {
+      // User found, show reset password form
+      showResetPassword(response.username);
+      setMessage(msg, "✅ User found. Please set your new password.", false);
+    } else {
+      // Generic message (security best practice)
+      setMessage(msg, response.message || "If an account exists, you can proceed to reset.", false);
+      // Still allow them to try resetting (for learning purposes)
+      if (usernameOrEmail) {
+        showResetPassword(usernameOrEmail);
+      }
+    }
+  } catch (err) {
+    setMessage(msg, err.message, true);
+  }
+}
+
+async function resetPassword() {
+  const username = document.getElementById("reset-password-section").getAttribute("data-username");
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
+  const msg = document.getElementById("reset-password-message");
+  
+  if (!username) {
+    setMessage(msg, "Username not found. Please start over.", true);
+    showForgotPassword();
+    return;
+  }
+  
+  if (!newPassword || !confirmPassword) {
+    setMessage(msg, "Please enter and confirm your new password", true);
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    setMessage(msg, "Password must be at least 6 characters", true);
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    setMessage(msg, "Passwords do not match", true);
+    return;
+  }
+  
+  try {
+    const response = await api("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ username, password: newPassword }),
+    });
+    
+    setMessage(msg, "✅ " + response.message, false);
+    
+    // Clear form
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-password").value = "";
+    
+    // Redirect to login after a moment
+    setTimeout(() => {
+      showLogin();
+      setMessage(document.getElementById("auth-message"), "Password reset successful! Please login with your new password.", false);
+    }, 2000);
+  } catch (err) {
+    setMessage(msg, err.message, true);
   }
 }
 
@@ -712,6 +826,17 @@ document.getElementById("has-account-btn").onclick = showLogin;
 document.getElementById("no-account-btn").onclick = showRegister;
 document.getElementById("back-to-welcome-btn").onclick = showWelcome;
 document.getElementById("back-to-welcome-reg-btn").onclick = showWelcome;
+
+// Forgot password event listeners
+document.getElementById("forgot-password-link").onclick = (e) => {
+  e.preventDefault();
+  showForgotPassword();
+};
+
+document.getElementById("request-reset-btn").onclick = requestPasswordReset;
+document.getElementById("back-to-login-btn").onclick = showLogin;
+document.getElementById("reset-password-btn").onclick = resetPassword;
+document.getElementById("cancel-reset-btn").onclick = showLogin;
 document.getElementById("login-btn").onclick = login;
 document.getElementById("register-btn").onclick = register;
 document.getElementById("logout-btn").onclick = logout;
@@ -933,6 +1058,8 @@ document.getElementById("cancel-assignment-btn").onclick = cancelAssignment;
 // Initialize password toggles
 togglePasswordVisibility("password", "toggle-password");
 togglePasswordVisibility("reg-password", "toggle-reg-password");
+togglePasswordVisibility("new-password", "toggle-new-password");
+togglePasswordVisibility("confirm-password", "toggle-confirm-password");
 
 // Allow Enter key to submit forms
 document.getElementById("password").addEventListener("keypress", (e) => {

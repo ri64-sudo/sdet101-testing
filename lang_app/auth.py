@@ -152,6 +152,7 @@ def login():
     """Login using MongoDB as the primary credential store when available.
 
     Falls back to SQL-only auth if MongoDB is not configured.
+    Also checks SQL if MongoDB check fails to handle password resets.
     """
     data = request.get_json() or {}
     username = data.get("username", "").strip()
@@ -182,6 +183,21 @@ def login():
                     {"_id": mongo_user["_id"]},
                     {"$set": {"sql_user_id": user.id}},
                 )
+        
+        # If MongoDB check failed, also check SQL (handles password resets)
+        if not success:
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                success = True
+                # Sync password to MongoDB if it exists there
+                if mongo_user:
+                    try:
+                        mongo_db.users.update_one(
+                            {"username": username},
+                            {"$set": {"password_hash": user.password_hash}}
+                        )
+                    except Exception:
+                        pass  # Non-critical
     else:
         # Fallback: original SQL-based auth
         user = User.query.filter_by(username=username).first()
@@ -190,13 +206,16 @@ def login():
 
     # Record login attempt details in MongoDB if configured.
     if mongo_db is not None:
-        mongo_db.login_events.insert_one(
-            {
-                "username": username,
-                "success": success,
-                "timestamp": datetime.utcnow(),
-            }
-        )
+        try:
+            mongo_db.login_events.insert_one(
+                {
+                    "username": username,
+                    "success": success,
+                    "timestamp": datetime.utcnow(),
+                }
+            )
+        except Exception:
+            pass  # Non-critical
 
     if not success or user is None:
         return jsonify({"error": "Invalid credentials"}), 401
@@ -217,4 +236,93 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logged out"})
+
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    """Request password reset - verify user exists."""
+    try:
+        data = request.get_json() or {}
+        username_or_email = data.get("username", "").strip()
+        
+        if not username_or_email:
+            return jsonify({"error": "Username or email is required"}), 400
+        
+        # Find user by username or email
+        user = User.query.filter(
+            (User.username == username_or_email) | (User.email == username_or_email)
+        ).first()
+        
+        if not user:
+            # Don't reveal if user exists or not (security best practice)
+            return jsonify({
+                "message": "If an account exists with that username/email, a password reset link would be sent.",
+                "success": True
+            }), 200
+        
+        # For this learning project, we'll return success
+        # In production, you'd send an email with a reset token
+        return jsonify({
+            "message": "Password reset request received",
+            "success": True,
+            "username": user.username  # Return username for the reset form
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to process request: {str(e)}"}), 500
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    """Reset user's password."""
+    try:
+        data = request.get_json() or {}
+        username = data.get("username", "").strip()
+        new_password = data.get("password", "")
+        
+        if not username or not new_password:
+            return jsonify({"error": "Username and new password are required"}), 400
+        
+        if len(new_password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters"}), 400
+        
+        # Find user
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Update password in SQL
+        user.set_password(new_password)
+        db.session.commit()
+        
+        # Update MongoDB if configured (sync after SQL commit to ensure consistency)
+        if mongo_db is not None:
+            try:
+                # Check if user exists in MongoDB
+                mongo_user = mongo_db.users.find_one({"username": username})
+                if mongo_user:
+                    # Update existing MongoDB user
+                    mongo_db.users.update_one(
+                        {"username": username},
+                        {"$set": {"password_hash": user.password_hash}}
+                    )
+                else:
+                    # Create MongoDB user if it doesn't exist (for consistency)
+                    mongo_db.users.insert_one({
+                        "username": username,
+                        "email": user.email,
+                        "password_hash": user.password_hash,
+                        "sql_user_id": user.id,
+                        "created_at": datetime.utcnow(),
+                    })
+            except Exception as e:
+                # Log but don't fail - SQL is the source of truth
+                print(f"Warning: Could not sync password to MongoDB: {e}")
+                pass
+        
+        return jsonify({
+            "message": "Password reset successfully. You can now login with your new password."
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Failed to reset password: {str(e)}"}), 500
 
