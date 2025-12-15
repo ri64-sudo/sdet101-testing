@@ -37,11 +37,13 @@ def create_app(test_config=None):
     from .tasks import tasks_bp  # noqa: WPS433
     from .vocab import vocab_bp  # noqa: WPS433
     from .analytics import analytics_bp  # noqa: WPS433
+    from .assignments import assignments_bp  # noqa: WPS433
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(tasks_bp, url_prefix="/api/tasks")
     app.register_blueprint(vocab_bp, url_prefix="/api/vocab")
     app.register_blueprint(analytics_bp, url_prefix="/api/analytics")
+    app.register_blueprint(assignments_bp, url_prefix="/api/assignments")
 
     @app.route("/")
     def index():

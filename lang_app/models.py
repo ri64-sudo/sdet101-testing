@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
 
     tasks = db.relationship("Task", backref="user", lazy=True)
     vocab_entries = db.relationship("VocabEntry", backref="user", lazy=True)
+    assignments = db.relationship("Assignment", backref="user", lazy=True)
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -39,4 +40,18 @@ class VocabEntry(db.Model):
     target_language = db.Column(db.String(10), nullable=False)
     translated_word = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Assignment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    assignment_type = db.Column(db.String(50), nullable=False)  # 'translation', 'fill_blank', 'multiple_choice'
+    language = db.Column(db.String(10), nullable=False)  # Target language
+    content = db.Column(db.Text, nullable=False)  # JSON string with exercise data
+    is_completed = db.Column(db.Boolean, default=False)
+    score = db.Column(db.Float, nullable=True)  # Percentage score
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
 

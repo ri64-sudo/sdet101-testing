@@ -64,6 +64,8 @@ function showLanguageSelection() {
   document.getElementById("tasks").style.display = "none";
   document.getElementById("vocab").style.display = "none";
   document.getElementById("quiz").style.display = "none";
+  const assignmentsSection = document.getElementById("assignments");
+  if (assignmentsSection) assignmentsSection.style.display = "none";
 }
 
 function hideLanguageSelection() {
@@ -79,6 +81,7 @@ function toggleSections(authenticated, hasLanguage = false) {
   const tasksSection = document.getElementById("tasks");
   const vocabSection = document.getElementById("vocab");
   const quizSection = document.getElementById("quiz");
+  const assignmentsSection = document.getElementById("assignments");
   const logoutBtn = document.getElementById("logout-btn");
 
   if (authenticated) {
@@ -96,6 +99,7 @@ function toggleSections(authenticated, hasLanguage = false) {
       tasksSection.style.display = "block";
       vocabSection.style.display = "block";
       quizSection.style.display = "block";
+      if (assignmentsSection) assignmentsSection.style.display = "block";
     }
     
     if (logoutBtn) logoutBtn.style.display = "inline-block";
@@ -106,6 +110,7 @@ function toggleSections(authenticated, hasLanguage = false) {
     tasksSection.style.display = "none";
     vocabSection.style.display = "none";
     quizSection.style.display = "none";
+    if (assignmentsSection) assignmentsSection.style.display = "none";
     if (logoutBtn) logoutBtn.style.display = "none";
   }
 }
@@ -131,7 +136,8 @@ async function refreshAuth() {
         await Promise.all([
           loadDashboard(),
           loadTasks(),
-          loadVocab()
+          loadVocab(),
+          loadAssignments()
         ]);
       }
     } else {
@@ -713,6 +719,178 @@ document.getElementById("task-add-btn").onclick = createTask;
 document.getElementById("vocab-add-btn").onclick = addVocab;
 document.getElementById("quiz-start-btn").onclick = startQuiz;
 
+// Assignment functions
+let currentAssignment = null;
+
+async function loadAssignments() {
+  try {
+    const assignments = await api("/api/assignments/");
+    const container = document.getElementById("assignments-container");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    
+    if (assignments.length === 0) {
+      container.innerHTML = "<p style='padding: 1rem; color: #666;'>No assignments yet. Generate one above!</p>";
+      return;
+    }
+    
+    assignments.forEach(assignment => {
+      const card = document.createElement("div");
+      card.className = "assignment-card";
+      card.style.borderLeft = assignment.is_completed ? "4px solid #48bb78" : "4px solid #667eea";
+      
+      const statusBadge = assignment.is_completed 
+        ? `<span class="status-badge completed">✅ Completed (${assignment.score}%)</span>`
+        : `<span class="status-badge pending">📝 Pending</span>`;
+      
+      card.innerHTML = `
+        <div class="assignment-card-header">
+          <h4>${assignment.title}</h4>
+          ${statusBadge}
+        </div>
+        <p class="assignment-meta">Type: ${assignment.type.replace('_', ' ')} | Language: ${assignment.language.toUpperCase()}</p>
+        ${assignment.description ? `<p>${assignment.description}</p>` : ''}
+        <div class="assignment-card-actions">
+          <button class="btn btn-primary btn-small" data-assignment-id="${assignment.id}">
+            ${assignment.is_completed ? 'View Results' : 'Start Assignment'}
+          </button>
+        </div>
+      `;
+      
+      container.appendChild(card);
+      
+      // Add click handler to the button
+      const viewBtn = card.querySelector('button');
+      if (viewBtn) {
+        viewBtn.onclick = () => viewAssignment(assignment.id);
+      }
+    });
+  } catch (err) {
+    console.error("Error loading assignments:", err);
+  }
+}
+
+async function generateAssignment(type) {
+  try {
+    const response = await api("/api/assignments/generate", {
+      method: "POST",
+      body: JSON.stringify({ type, language: currentUserLanguage }),
+    });
+    
+    currentAssignment = response;
+    viewAssignment(response.id);
+    await loadAssignments();
+  } catch (err) {
+    alert(err.message || "Failed to generate assignment");
+  }
+}
+
+async function viewAssignment(assignmentId) {
+  try {
+    const assignment = await api(`/api/assignments/${assignmentId}`);
+    currentAssignment = assignment;
+    
+    // Show assignment viewer
+    document.getElementById("assignments-list").style.display = "none";
+    document.getElementById("assignment-viewer").style.display = "block";
+    
+    document.getElementById("assignment-title").textContent = assignment.title;
+    document.getElementById("assignment-description").textContent = assignment.description || "";
+    
+    const questionsDiv = document.getElementById("assignment-questions");
+    questionsDiv.innerHTML = "";
+    
+    const questions = assignment.content.questions;
+    Object.keys(questions).forEach(qId => {
+      const question = questions[qId];
+      const questionDiv = document.createElement("div");
+      questionDiv.className = "assignment-question";
+      
+      if (assignment.type === "multiple_choice") {
+        questionDiv.innerHTML = `
+          <div class="question-label">${question.question}</div>
+          <div class="options-container">
+            ${question.options.map((opt, idx) => `
+              <label class="option-label">
+                <input type="radio" name="q${qId}" value="${idx}" ${assignment.is_completed ? 'disabled' : ''}>
+                ${opt}
+              </label>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        questionDiv.innerHTML = `
+          <div class="question-label">${question.question}</div>
+          <input type="text" 
+                 class="input-field assignment-answer" 
+                 data-question="${qId}" 
+                 placeholder="Your answer"
+                 ${assignment.is_completed ? 'disabled' : ''}>
+        `;
+      }
+      
+      questionsDiv.appendChild(questionDiv);
+    });
+    
+    // Show/hide submit button based on completion
+    const submitBtn = document.getElementById("submit-assignment-btn");
+    if (assignment.is_completed) {
+      submitBtn.style.display = "none";
+      showAssignmentResults(assignment);
+    } else {
+      submitBtn.style.display = "inline-block";
+      document.getElementById("assignment-result").innerHTML = "";
+    }
+  } catch (err) {
+    alert(err.message || "Failed to load assignment");
+  }
+}
+
+async function submitAssignment() {
+  if (!currentAssignment) return;
+  
+  const answers = {};
+  const questionInputs = document.querySelectorAll(".assignment-answer, input[type='radio']:checked");
+  
+  questionInputs.forEach(input => {
+    const questionId = input.dataset.question || input.name.replace('q', '');
+    answers[questionId] = input.value;
+  });
+  
+  try {
+    const result = await api(`/api/assignments/${currentAssignment.id}/submit`, {
+      method: "POST",
+      body: JSON.stringify({ answers }),
+    });
+    
+    showAssignmentResults({ ...currentAssignment, is_completed: true, score: result.score }, result);
+    document.getElementById("submit-assignment-btn").style.display = "none";
+    await loadAssignments();
+  } catch (err) {
+    alert(err.message || "Failed to submit assignment");
+  }
+}
+
+function showAssignmentResults(assignment, result = null) {
+  const resultDiv = document.getElementById("assignment-result");
+  if (result) {
+    resultDiv.innerHTML = `
+      <div class="result-summary">
+        <h3>${result.feedback}</h3>
+        <p>Score: <strong>${result.score}%</strong> (${result.correct}/${result.total} correct)</p>
+      </div>
+    `;
+    resultDiv.className = "assignment-result " + (result.score >= 70 ? "success" : "warning");
+  }
+}
+
+function cancelAssignment() {
+  document.getElementById("assignments-list").style.display = "block";
+  document.getElementById("assignment-viewer").style.display = "none";
+  currentAssignment = null;
+}
+
 // Language selection event listeners
 document.querySelectorAll(".language-btn").forEach(btn => {
   btn.onclick = () => {
@@ -737,7 +915,20 @@ document.getElementById("change-language-btn").onclick = () => {
   document.getElementById("tasks").style.display = "none";
   document.getElementById("vocab").style.display = "none";
   document.getElementById("quiz").style.display = "none";
+  const assignmentsSection = document.getElementById("assignments");
+  if (assignmentsSection) assignmentsSection.style.display = "none";
 };
+
+// Assignment event listeners
+document.querySelectorAll(".assignment-type-btn").forEach(btn => {
+  btn.onclick = () => {
+    const type = btn.getAttribute("data-type");
+    generateAssignment(type);
+  };
+});
+
+document.getElementById("submit-assignment-btn").onclick = submitAssignment;
+document.getElementById("cancel-assignment-btn").onclick = cancelAssignment;
 
 // Initialize password toggles
 togglePasswordVisibility("password", "toggle-password");

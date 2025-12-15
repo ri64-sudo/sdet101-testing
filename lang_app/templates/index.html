@@ -189,6 +189,43 @@
       <div id="quiz-area" class="quiz-area"></div>
       <div id="quiz-result" class="quiz-result"></div>
     </section>
+
+    <!-- Assignments Section -->
+    <section id="assignments" class="card" style="display: none;">
+      <h2>📝 Language Assignments</h2>
+      <p class="section-description">Practice your language skills with interactive exercises!</p>
+      
+      <div class="assignment-controls">
+        <h3>Generate New Assignment</h3>
+        <div class="assignment-type-buttons">
+          <button class="btn btn-primary assignment-type-btn" data-type="translation">
+            📝 Translation Practice
+          </button>
+          <button class="btn btn-secondary assignment-type-btn" data-type="fill_blank">
+            ✏️ Fill in the Blank
+          </button>
+          <button class="btn btn-secondary assignment-type-btn" data-type="multiple_choice">
+            ✅ Multiple Choice
+          </button>
+        </div>
+      </div>
+
+      <div id="assignments-list" class="assignments-list">
+        <h3>Your Assignments</h3>
+        <div id="assignments-container"></div>
+      </div>
+
+      <div id="assignment-viewer" class="assignment-viewer" style="display: none;">
+        <h3 id="assignment-title"></h3>
+        <p id="assignment-description"></p>
+        <div id="assignment-questions"></div>
+        <div class="assignment-actions">
+          <button id="submit-assignment-btn" class="btn btn-primary">Submit Assignment</button>
+          <button id="cancel-assignment-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+        <div id="assignment-result" class="assignment-result"></div>
+      </div>
+    </section>
   </main>
 
   <footer>

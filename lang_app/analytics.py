@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import and_
 
 from .extensions import db
-from .models import Task, VocabEntry
+from .models import Task, VocabEntry, Assignment
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -74,6 +74,14 @@ def dashboard():
             # Fallback if there's an issue with the query
             upcoming_tasks = []
         
+        # Assignment statistics
+        all_assignments = Assignment.query.filter_by(user_id=current_user.id).all()
+        completed_assignments = [a for a in all_assignments if a.is_completed]
+        pending_assignments = [a for a in all_assignments if not a.is_completed]
+        
+        assignment_scores = [a.score for a in completed_assignments if a.score is not None]
+        avg_score = sum(assignment_scores) / len(assignment_scores) if assignment_scores else 0
+        
         return jsonify({
             "tasks": {
                 "completion": task_completion_data,
@@ -92,11 +100,19 @@ def dashboard():
                 "by_language": dict(vocab_by_language),
                 "learned_over_time": dict(vocab_by_date)
             },
+            "assignments": {
+                "total": len(all_assignments),
+                "completed": len(completed_assignments),
+                "pending": len(pending_assignments),
+                "average_score": round(avg_score, 1) if avg_score > 0 else None
+            },
             "summary": {
                 "total_tasks": len(all_tasks),
                 "completed_tasks": len(completed_tasks),
                 "total_vocab_words": len(all_vocab),
-                "languages_studied": len(vocab_by_language)
+                "languages_studied": len(vocab_by_language),
+                "total_assignments": len(all_assignments),
+                "completed_assignments": len(completed_assignments)
             }
         })
     except Exception as e:
