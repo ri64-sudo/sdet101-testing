@@ -167,6 +167,11 @@ async function refreshAuth() {
       if (hasLanguage) {
         // Update vocabulary form with preferred language
         updateVocabularyLanguage(currentUserLanguage);
+        // Update language dropdown
+        const langSelect = document.getElementById("language-select");
+        if (langSelect) {
+          langSelect.value = currentUserLanguage;
+        }
         await Promise.all([
           loadDashboard(),
           loadTasks(),
@@ -191,6 +196,15 @@ async function refreshAuth() {
 async function setLanguage(languageCode) {
   const msg = document.getElementById("lang-message");
   try {
+    const langNames = {
+      "es": "Spanish", "fr": "French", "de": "German", "it": "Italian",
+      "pt": "Portuguese", "ru": "Russian", "ja": "Japanese", "ko": "Korean",
+      "zh": "Chinese", "ar": "Arabic", "hi": "Hindi", "nl": "Dutch",
+      "sv": "Swedish", "pl": "Polish", "tr": "Turkish", "vi": "Vietnamese",
+      "th": "Thai", "he": "Hebrew", "cs": "Czech", "ro": "Romanian", "hu": "Hungarian"
+    };
+    const langName = langNames[languageCode] || languageCode.toUpperCase();
+    
     setMessage(msg, "Setting language and creating your starter activity...", false);
     await api("/api/auth/set-language", {
       method: "POST",
@@ -198,10 +212,16 @@ async function setLanguage(languageCode) {
     });
     
     currentUserLanguage = languageCode;
-    setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}! Creating basic starter activity...`, false);
+    setMessage(msg, `✅ Language set to ${langName}! Creating basic starter activity...`, false);
     
     // Update UI
     updateVocabularyLanguage(languageCode);
+    
+    // Update dropdown to show selected language
+    const langSelect = document.getElementById("language-select");
+    if (langSelect) {
+      langSelect.value = languageCode;
+    }
     
     // Automatically generate a basic assignment
     try {
@@ -209,11 +229,11 @@ async function setLanguage(languageCode) {
         method: "POST",
         body: JSON.stringify({ type: "basic", language: languageCode }),
       });
-      setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}! Basic starter activity created! 🎉`, false);
+      setMessage(msg, `✅ Language set to ${langName}! Basic starter activity created! 🎉`, false);
     } catch (assignErr) {
       // If basic assignment fails, still continue
       console.log("Could not create basic assignment:", assignErr);
-      setMessage(msg, `✅ Language set to ${languageCode.toUpperCase()}!`, false);
+      setMessage(msg, `✅ Language set to ${langName}!`, false);
     }
     
     // Show main app sections (language selection stays visible at top)
@@ -232,16 +252,19 @@ async function setLanguage(languageCode) {
 }
 
 function updateVocabularyLanguage(langCode) {
-  const langInput = document.getElementById("vocab-lang");
+  // Update current language badge with full language name
   const langDisplay = document.getElementById("current-language-display");
   
-  if (langInput) {
-    langInput.value = langCode;
-    langInput.placeholder = `Language: ${langCode.toUpperCase()}`;
-  }
-  
-  if (langDisplay) {
-    langDisplay.textContent = `🌍 Learning: ${langCode.toUpperCase()}`;
+  if (langDisplay && langCode) {
+    const langNames = {
+      "es": "Spanish", "fr": "French", "de": "German", "it": "Italian",
+      "pt": "Portuguese", "ru": "Russian", "ja": "Japanese", "ko": "Korean",
+      "zh": "Chinese", "ar": "Arabic", "hi": "Hindi", "nl": "Dutch",
+      "sv": "Swedish", "pl": "Polish", "tr": "Turkish", "vi": "Vietnamese",
+      "th": "Thai", "he": "Hebrew", "cs": "Czech", "ro": "Romanian", "hu": "Hungarian"
+    };
+    const langName = langNames[langCode] || langCode.toUpperCase();
+    langDisplay.textContent = `🌍 Learning: ${langName}`;
   }
 }
 
@@ -704,35 +727,46 @@ async function loadVocab() {
 
 async function addVocab() {
   const source_word = document.getElementById("vocab-word").value.trim();
-  let target_language = document.getElementById("vocab-lang").value.trim().toLowerCase();
-  
-  // Use preferred language if no language specified
-  if (!target_language && currentUserLanguage) {
-    target_language = currentUserLanguage;
-    document.getElementById("vocab-lang").value = target_language;
-  }
+  const vocabWordInput = document.getElementById("vocab-word");
   
   if (!source_word) {
     alert("Please enter a word to learn");
     return;
   }
   
-  if (!target_language) {
+  // Always use the current user's preferred language
+  if (!currentUserLanguage) {
     alert("Please select a learning language first");
     showLanguageSelection();
     return;
   }
   
+  // Show loading state
+  const addBtn = document.getElementById("vocab-add-btn");
+  const originalText = addBtn.textContent;
+  addBtn.textContent = "Translating...";
+  addBtn.disabled = true;
+  
   try {
-    await api("/api/vocab/", {
+    const response = await api("/api/vocab/", {
       method: "POST",
-      body: JSON.stringify({ source_word, target_language }),
+      body: JSON.stringify({ source_word, target_language: currentUserLanguage }),
     });
-    document.getElementById("vocab-word").value = "";
-    // Keep the language code in the input
+    
+    vocabWordInput.value = "";
     await loadVocab();
+    
+    // Show success message briefly
+    addBtn.textContent = "✓ Added!";
+    setTimeout(() => {
+      addBtn.textContent = originalText;
+      addBtn.disabled = false;
+    }, 1500);
   } catch (err) {
-    alert(err.message);
+    addBtn.textContent = originalText;
+    addBtn.disabled = false;
+    alert(`Translation failed: ${err.message}. Please try again or check your internet connection.`);
+    console.error("Vocabulary add error:", err);
   }
 }
 
@@ -1031,22 +1065,26 @@ function cancelAssignment() {
 }
 
 // Language selection event listeners
-document.querySelectorAll(".language-btn").forEach(btn => {
-  btn.onclick = () => {
-    const langCode = btn.getAttribute("data-lang");
-    setLanguage(langCode);
-  };
-});
-
-document.getElementById("custom-lang-btn").onclick = () => {
-  const customLang = document.getElementById("custom-lang-code").value.trim().toLowerCase();
-  if (customLang && customLang.length >= 2 && customLang.length <= 3) {
-    setLanguage(customLang);
-  } else {
+// Language selection dropdown handler
+document.getElementById("select-language-btn").onclick = () => {
+  const langSelect = document.getElementById("language-select");
+  const langCode = langSelect.value.trim().toLowerCase();
+  
+  if (!langCode) {
     const msg = document.getElementById("lang-message");
-    setMessage(msg, "❌ Please enter a valid 2-3 character language code", true);
+    setMessage(msg, "❌ Please select a language from the dropdown", true);
+    return;
   }
+  
+  setLanguage(langCode);
 };
+
+// Allow Enter key on select
+document.getElementById("language-select").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("select-language-btn").click();
+  }
+});
 
 document.getElementById("change-language-btn").onclick = () => {
   showLanguageSelection();
